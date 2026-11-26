@@ -149,12 +149,20 @@ jobs:
 
       - name: Verify APK output
         id: apk
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Flutter moved the output path between versions, so discover it.
+          echo "--- all .apk files under build/ ---"
+          find build -type f -name "*.apk" -exec ls -lh {} \; || true
           APK=$(find build -type f \( -name "*-release.apk" -o -name "app-release.apk" \) | head -n 1)
           if [[ -z "$APK" ]]; then
-            echo "No release APK produced. APK-ish files found:"
-            find build -type f -name "*.apk" || true
+            REPORT=$(find build -type f -name "*.apk" | head -n 20; echo; find build -type d -maxdepth 6 -name "outputs" | head -n 20)
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
+              -f body="### APK discovery failed
+\`\`\`
+${REPORT:-no apk files found}
+\`\`\`" || true
             exit 1
           fi
           echo "apk_path=$APK" >> "$GITHUB_OUTPUT"

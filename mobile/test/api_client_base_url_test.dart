@@ -41,9 +41,9 @@ void main() {
   test('401s are treated as errors so the refresh path runs', () {
     final client = ApiClient(secureStore: SecureStore());
 
+    // validateStatus is non-nullable in dio 5.x, so it is called directly.
     final validate = client.raw.options.validateStatus;
-    expect(validate, isNotNull);
-    expect(validate!(401), isFalse);
+    expect(validate(401), isFalse);
     expect(validate(200), isTrue);
   });
 

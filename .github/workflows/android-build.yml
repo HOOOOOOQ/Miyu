@@ -20,8 +20,6 @@ concurrency:
 permissions:
   contents: read
 
-# TEMPORARY diagnostics: publish analyze failures as a commit comment.
-
 env:
   FLUTTER_VERSION: "3.32.8"
   JAVA_VERSION: "17"
@@ -31,8 +29,6 @@ jobs:
     name: Analyze, test & build release APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    permissions:
-      contents: write
     defaults:
       run:
         working-directory: mobile
@@ -74,46 +70,15 @@ jobs:
           }
 
       - name: Static analysis
-        # `set -o pipefail` keeps a real analyzer failure from being masked by tee.
+        # pipefail: without it `| tee` returns tee's status, masking real failures.
         run: |
           set -o pipefail
           flutter analyze --no-pub 2>&1 | tee /tmp/analyze.log
-
-      - name: Publish analyzer output
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          {
-            echo '### flutter analyze'
-            echo '```'
-            # Capture every diagnostic line (error/warning/info) plus the summary.
-            grep -E "•" /tmp/analyze.log | head -n 100 || true
-            echo '--- tail ---'
-            tail -n 15 /tmp/analyze.log
-            echo '```'
-          } > /tmp/body.md
-          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(cat /tmp/body.md)" || true
 
       - name: Unit & widget tests
         run: |
           set -o pipefail
           flutter test --no-pub --reporter expanded 2>&1 | tee /tmp/test.log
-
-      - name: Publish test output
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          {
-            echo '### flutter test'
-            echo '```'
-            tail -n 100 /tmp/test.log 2>/dev/null || echo 'no log captured'
-            echo '```'
-          } > /tmp/body.md
-          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(cat /tmp/body.md)" || true
 
       - name: Decode google-services.json (optional)
         env:
@@ -143,27 +108,6 @@ jobs:
             --dart-define=APP_ENV="${APP_ENV:-production}" \
             --dart-define=APP_VERSION="${APP_VERSION:-1.0.0}" \
             --dart-define=GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-}" 2>&1 | tee /tmp/build.log
-
-      - name: Publish build output
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          {
-            echo '### flutter build apk'
-            echo '```'
-            grep -nE "Error:|error:|FAILURE|What went wrong|Caused by" /tmp/build.log | head -n 40
-            echo '--- context around first Error ---'
-            FIRST=$(grep -n "Error:" /tmp/build.log | head -n 1 | cut -d: -f1)
-            if [[ -n "$FIRST" ]]; then
-              sed -n "$((FIRST-6)),$((FIRST+14))p" /tmp/build.log
-            else
-              tail -n 60 /tmp/build.log
-            fi
-            echo '```'
-          } > /tmp/body.md
-          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(cat /tmp/body.md)" || true
 
       - name: Verify APK output
         id: apk

@@ -6,7 +6,7 @@ open on the repository's **Actions** tab; nothing here is claimed without one.
 
 | Gate | Commit | Workflow |
 | --- | --- | --- |
-| Backend (37 tests, MongoDB service) | `6ba2416` | `backend-check.yml` |
+| Backend (48 tests, MongoDB service) | `e2da710` | `backend-check.yml` |
 | Mobile (analyze, tests, APK) | `d199706` | `android-build.yml` |
 
 ## 1. Backend — `backend-check.yml`
@@ -19,7 +19,7 @@ Environment: `ubuntu-latest`, Node 20, `mongo:7` service container,
 | `npm ci` | ✅ |
 | `npm run lint` (ESLint) | ✅ 0 problems |
 | config module load | ✅ |
-| `npm test -- --runInBand` | ✅ **5 suites / 37 tests / 0 skipped** |
+| `npm test -- --runInBand` | ✅ **7 suites / 48 tests** (35 passing, 13 DB cases skipped without a database; the CI run above passes all of them against `mongo:7`) |
 | `docker build` | ✅ |
 | container `/api/health` smoke | ✅ |
 

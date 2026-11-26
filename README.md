@@ -19,7 +19,7 @@ Miyu is a full-stack instant messenger, not a UI mockup:
 
 | Area | Implementation |
 | --- | --- |
-| **Client** | Flutter (Dart 3.5), Riverpod, go_router, glass design system, light/dark/system themes |
+| **Client** | Flutter 3.32 (Dart 3.8+), Riverpod, go_router, glass design system, light/dark/system themes |
 | **Backend** | Node.js 20, Express, Mongoose, Zod validation, Helmet, rate limiting, pino logging |
 | **Database** | MongoDB Atlas — users, conversations, messages, groups, calls, notifications, devices, blocked users, refresh tokens |
 | **Auth** | Google Sign-In → server-side ID-token verification → JWT access (15 min) + rotating refresh (30 days) |
@@ -28,7 +28,8 @@ Miyu is a full-stack instant messenger, not a UI mockup:
 | **Media** | Images, video, documents, voice notes uploaded through the backend to Cloudinary (25 MB cap) |
 | **Push** | Firebase Cloud Messaging channels for messages, calls, groups; token lifecycle managed |
 | **CI/CD** | GitHub Actions: analyze + test + release APK on every push, signed releases on tags |
-| **Tests** | 37 backend tests (real MongoDB in CI) + Flutter analyzer & widget tests — all green in GitHub Actions |
+| **Hosting** | Pterodactyl container at `play.notmemc.my.id:3186` (Socket.IO needs a long-lived port) — [docs/PTERODACTYL.md](docs/PTERODACTYL.md) |
+| **Tests** | 48 backend tests (real MongoDB in CI) + Flutter analyzer & 58 widget/unit tests — all green in GitHub Actions |
 
 ### Feature checklist
 
@@ -241,7 +242,7 @@ npm test              # jest
 ```
 
 **Verified in GitHub Actions (`backend-check.yml`), against a real `mongo:7`
-service container:** `5 suites, 37 tests, all passing` — no skips.
+service container:** `7 suites, 48 tests, all passing` — no skips.
 
 - tokens: signing/verification, tamper & expiry rejection, refresh-type confusion
 - validation: every Zod schema, username sanitising

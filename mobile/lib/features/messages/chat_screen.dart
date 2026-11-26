@@ -515,7 +515,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: Row(
             children: [
               MiyuAvatar(
-                name: chat?.title ?? 'Chat',
+                name: chat?.title ?? (_loadingChat ? 'Loading…' : 'Chat'),
                 imageUrl: chat?.avatarUrl,
                 size: 40,
                 showPresence: chat != null && !chat.isGroup,

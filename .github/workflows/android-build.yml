@@ -148,15 +148,24 @@ jobs:
             -f body="$(cat /tmp/body.md)" || true
 
       - name: Verify APK output
+        id: apk
         run: |
-          test -f build/app/outputs/flutter-apk/app-release.apk
-          ls -lh build/app/outputs/flutter-apk/
+          # Flutter moved the output path between versions, so discover it.
+          APK=$(find build -type f \( -name "*-release.apk" -o -name "app-release.apk" \) | head -n 1)
+          if [[ -z "$APK" ]]; then
+            echo "No release APK produced. APK-ish files found:"
+            find build -type f -name "*.apk" || true
+            exit 1
+          fi
+          echo "apk_path=$APK" >> "$GITHUB_OUTPUT"
+          ls -lh "$APK"
+          echo "sha256: $(sha256sum "$APK" | cut -d' ' -f1)"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: miyu-apk-${{ github.sha }}
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          path: mobile/${{ steps.apk.outputs.apk_path }}
           retention-days: 14
           if-no-files-found: error
 
@@ -167,7 +176,7 @@ jobs:
             echo ""
             echo "- Commit: \`${{ github.sha }}\`"
             echo "- Artifact: \`miyu-apk-${{ github.sha }}\`"
-            echo "- Path inside artifact: \`app-release.apk\`"
+            echo "- Path inside artifact: \`${{ steps.apk.outputs.apk_path }}\`"
             echo ""
             echo "Download it from the **Artifacts** section of this run."
           } >> "$GITHUB_STEP_SUMMARY"

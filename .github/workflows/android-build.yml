@@ -87,7 +87,10 @@ jobs:
           {
             echo '### flutter analyze'
             echo '```'
-            grep -E "error •|warning •" /tmp/analyze.log 2>/dev/null | head -n 80 || tail -n 60 /tmp/analyze.log
+            # Capture every diagnostic line (error/warning/info) plus the summary.
+            grep -E "•" /tmp/analyze.log | head -n 100 || true
+            echo '--- tail ---'
+            tail -n 15 /tmp/analyze.log
             echo '```'
           } > /tmp/body.md
           gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \

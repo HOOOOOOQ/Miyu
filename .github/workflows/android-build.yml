@@ -144,7 +144,14 @@ jobs:
           {
             echo '### flutter build apk'
             echo '```'
-            grep -nE "FAILURE|What went wrong|error:|ERROR|Exception|Could not|Caused by" /tmp/build.log 2>/dev/null | head -n 60 || tail -n 80 /tmp/build.log
+            grep -nE "Error:|error:|FAILURE|What went wrong|Caused by" /tmp/build.log | head -n 40
+            echo '--- context around first Error ---'
+            FIRST=$(grep -n "Error:" /tmp/build.log | head -n 1 | cut -d: -f1)
+            if [[ -n "$FIRST" ]]; then
+              sed -n "$((FIRST-6)),$((FIRST+14))p" /tmp/build.log
+            else
+              tail -n 60 /tmp/build.log
+            fi
             echo '```'
           } > /tmp/body.md
           gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \

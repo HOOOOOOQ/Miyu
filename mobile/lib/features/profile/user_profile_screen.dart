@@ -110,6 +110,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     } else {
                       await ref.read(chatRepositoryProvider).blockUser(user.id);
                     }
+                    if (!mounted) return;
                     setState(() => _blocked = !_blocked);
                   } catch (_) {
                     if (mounted) MiyuDialogs.toast(context, 'Action failed');
@@ -124,11 +125,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     confirmLabel: 'Report',
                   );
                   if (reason == null || reason.length < 3 || !mounted) return;
+                  final reportContext = context;
                   try {
                     await ref.read(chatRepositoryProvider).reportUser(user.id, reason);
-                    if (mounted) MiyuDialogs.toast(context, 'Report submitted');
+                    if (mounted) MiyuDialogs.toast(reportContext, 'Report submitted');
                   } catch (_) {
-                    if (mounted) MiyuDialogs.toast(context, 'Could not submit the report');
+                    if (mounted) MiyuDialogs.toast(reportContext, 'Could not submit the report');
                   }
                 }
               },
@@ -262,6 +264,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           onPressed: () async {
                             try {
                               await ref.read(chatRepositoryProvider).unblockUser(user.id);
+                              if (!mounted) return;
                               setState(() => _blocked = false);
                             } catch (_) {
                               if (mounted) MiyuDialogs.toast(context, 'Could not unblock');

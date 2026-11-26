@@ -213,7 +213,7 @@ final realtimeCoordinatorProvider = Provider<RealtimeCoordinator>((ref) {
   final coordinator = RealtimeCoordinator(ref: ref);
   ref.listen<SessionState>(sessionProvider, (previous, next) async {
     if (next.isAuthenticated && previous?.isAuthenticated != true) {
-      await _ref_pushInitAndStart(ref, coordinator);
+      await _pushInitAndStart(ref, coordinator);
     } else if (!next.isAuthenticated && previous?.isAuthenticated == true) {
       await coordinator.stop();
     }
@@ -221,7 +221,7 @@ final realtimeCoordinatorProvider = Provider<RealtimeCoordinator>((ref) {
   return coordinator;
 });
 
-Future<void> _ref_pushInitAndStart(Ref ref, RealtimeCoordinator coordinator) async {
+Future<void> _pushInitAndStart(Ref ref, RealtimeCoordinator coordinator) async {
   final push = ref.read(pushServiceProvider);
   await push.initialize();
   await push.registerCurrentDevice();

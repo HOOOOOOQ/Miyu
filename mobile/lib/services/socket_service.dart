@@ -112,13 +112,13 @@ class SocketService {
 
   /// Registers a typed listener and survives reconnects.
   void on<T>(String event, void Function(T payload) handler) {
-    final wrapped = (dynamic data) {
+    void wrapped(dynamic data) {
       if (data is T) {
         handler(data);
       } else if (T == dynamic) {
         handler(data as T);
       }
-    };
+    }
     _listeners.putIfAbsent(event, () => []).add(wrapped);
     _socket?.on(event, wrapped);
   }

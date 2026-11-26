@@ -41,10 +41,14 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         );
       }
       if (next.phase == CallPhase.ended || next.phase == CallPhase.failed) {
+        // Grab the router now: using context after the delay is unsafe.
+        final router = GoRouter.of(context);
+        final messenger = ScaffoldMessenger.of(context);
         Future.delayed(const Duration(milliseconds: 1200), () {
           if (!mounted) return;
+          messenger.hideCurrentSnackBar();
           controller.reset();
-          if (context.canPop()) context.pop();
+          if (router.canPop()) router.pop();
         });
       }
     });

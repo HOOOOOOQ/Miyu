@@ -196,11 +196,12 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                             initialValue: group.name,
                           );
                           if (name == null || name.isEmpty || !mounted) return;
+                          final errorContext = context;
                           final error = await ref
                               .read(groupControllerProvider.notifier)
                               .update(group.id, {'name': name});
                           if (error != null && mounted) {
-                            await MiyuDialogs.showError(context, error);
+                            await MiyuDialogs.showError(errorContext, error);
                           }
                         }
                       : null,
@@ -256,13 +257,15 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                       destructive: true,
                     );
                     if (!confirmed || !mounted) return;
+                    final router = GoRouter.of(context);
+                    final messengerContext = context;
                     final error = await ref.read(groupControllerProvider.notifier).leave(group.id);
                     if (!mounted) return;
                     if (error != null) {
-                      await MiyuDialogs.showError(context, error);
+                      await MiyuDialogs.showError(messengerContext, error);
                     } else {
                       ref.read(chatListProvider.notifier).removeChat(group.conversationId ?? '');
-                      context.go(MiyuRoutes.home);
+                      router.go(MiyuRoutes.home);
                     }
                   },
                 ),
@@ -280,13 +283,15 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                         destructive: true,
                       );
                       if (!confirmed || !mounted) return;
+                      final router = GoRouter.of(context);
+                      final messengerContext = context;
                       final error = await ref.read(groupControllerProvider.notifier).delete(group.id);
                       if (!mounted) return;
                       if (error != null) {
-                        await MiyuDialogs.showError(context, error);
+                        await MiyuDialogs.showError(messengerContext, error);
                       } else {
                         ref.read(chatListProvider.notifier).removeChat(group.conversationId ?? '');
-                        context.go(MiyuRoutes.home);
+                        router.go(MiyuRoutes.home);
                       }
                     },
                   ),

@@ -16,7 +16,15 @@ function signAccessToken(user) {
 function signRefreshTokenValue(user, family) {
   if (!env.jwtRefreshSecret) throw new Error('JWT_REFRESH_SECRET is not configured');
   return jwt.sign(
-    { sub: user._id.toString(), type: 'refresh', family },
+    {
+      sub: user._id.toString(),
+      type: 'refresh',
+      family,
+      // Without a per-token nonce, two rotations inside the same second produce
+      // byte-identical JWTs (same iat/exp/sub). The unique tokenHash index then
+      // rejects the second insert with E11000 and refresh fails with HTTP 409.
+      jti: crypto.randomBytes(16).toString('hex'),
+    },
     env.jwtRefreshSecret,
     { expiresIn: env.jwtRefreshExpiresIn, issuer: 'miyu' }
   );

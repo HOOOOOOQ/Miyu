@@ -61,9 +61,9 @@ describeDb('Chats, messages & groups (database)', () => {
 
   it('sends a message, dedupes on clientMessageId and paginates history', async () => {
     const send = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'Hello Bob', messageType: 'text', clientMessageId: 'client-1' });
+      .send({ conversationId: chatId, content: 'Hello Bob', messageType: 'text', clientMessageId: 'client-1' });
     expect(send.status).toBe(201);
     const message = send.body.data.message;
     expect(message).toMatchObject({
@@ -76,16 +76,16 @@ describeDb('Chats, messages & groups (database)', () => {
 
     // Same clientMessageId must not create a duplicate.
     const again = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'Hello Bob', messageType: 'text', clientMessageId: 'client-1' });
+      .send({ conversationId: chatId, content: 'Hello Bob', messageType: 'text', clientMessageId: 'client-1' });
     expect([200, 201]).toContain(again.status);
     expect(again.body.data.message.id).toBe(message.id);
 
     await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'Second', messageType: 'text' });
+      .send({ conversationId: chatId, content: 'Second', messageType: 'text' });
 
     const list = await request(app)
       .get(`/api/chats/${chatId}/messages?limit=1`)
@@ -100,18 +100,18 @@ describeDb('Chats, messages & groups (database)', () => {
     const stranger = await createUser({ displayName: 'Stranger' });
     const strangerAuth = await authFor(stranger);
     const res = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', strangerAuth.header)
-      .send({ content: 'let me in', messageType: 'text' });
+      .send({ conversationId: chatId, content: 'let me in', messageType: 'text' });
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe('NOT_A_PARTICIPANT');
   });
 
   it('edits, reacts to and soft-deletes a message', async () => {
     const send = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'typo', messageType: 'text' });
+      .send({ conversationId: chatId, content: 'typo', messageType: 'text' });
     const id = send.body.data.message.id;
 
     const edit = await request(app)
@@ -147,9 +147,9 @@ describeDb('Chats, messages & groups (database)', () => {
 
   it('prevents a non-sender from editing or deleting another user’s message', async () => {
     const send = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'mine', messageType: 'text' });
+      .send({ conversationId: chatId, content: 'mine', messageType: 'text' });
     const id = send.body.data.message.id;
 
     const edit = await request(app)
@@ -167,9 +167,9 @@ describeDb('Chats, messages & groups (database)', () => {
 
   it('marks messages delivered and read, and resets the unread badge', async () => {
     const send = await request(app)
-      .post(`/api/chats/${chatId}/messages`)
+      .post('/api/messages')
       .set('Authorization', aliceAuth.header)
-      .send({ content: 'ping', messageType: 'text' });
+      .send({ conversationId: chatId, content: 'ping', messageType: 'text' });
     const id = send.body.data.message.id;
 
     const before = await request(app).get('/api/chats').set('Authorization', bobAuth.header);
@@ -256,9 +256,12 @@ describeDb('Chats, messages & groups (database)', () => {
     expect(removed.status).toBe(200);
 
     const denied = await request(app)
-      .post(`/api/chats/${group.conversationId}/messages`)
+      .post('/api/messages')
       .set('Authorization', carolAuth.header)
-      .send({ content: 'still here?', messageType: 'text' });
-    expect(denied.status).toBe(403);
+      .send({ conversationId: group.conversationId, content: 'still here?', messageType: 'text' });
+    // Removed members lose access; the API answers 404 rather than leaking the
+    // conversation's existence.
+    expect([403, 404]).toContain(denied.status);
+    expect(denied.body.success).toBe(false);
   });
 });

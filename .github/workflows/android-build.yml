@@ -131,7 +131,21 @@ jobs:
             --dart-define=SOCKET_URL="${SOCKET_URL:-https://api.miyu.app}" \
             --dart-define=APP_ENV="${APP_ENV:-production}" \
             --dart-define=APP_VERSION="${APP_VERSION:-1.0.0}" \
-            --dart-define=GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-}"
+            --dart-define=GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-}" 2>&1 | tee /tmp/build.log
+
+      - name: Publish build output
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo '### flutter build apk'
+            echo '```'
+            grep -nE "FAILURE|What went wrong|error:|ERROR|Exception|Could not|Caused by" /tmp/build.log 2>/dev/null | head -n 60 || tail -n 80 /tmp/build.log
+            echo '```'
+          } > /tmp/body.md
+          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
+            -f body="$(cat /tmp/body.md)" || true
 
       - name: Verify APK output
         run: |

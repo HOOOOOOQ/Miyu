@@ -51,6 +51,9 @@ jobs:
           cache: true
 
       - name: Restore Gradle wrapper
+        # Flutter injects a wrapper automatically if this cannot fetch one, so
+        # a network hiccup here must not fail the build.
+        continue-on-error: true
         run: bash tool/setup_android_wrapper.sh
 
       - name: Install dependencies

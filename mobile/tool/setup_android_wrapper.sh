@@ -17,19 +17,42 @@ if [[ -s "$JAR" ]]; then
   echo "gradle-wrapper.jar already present"
 else
   echo "Fetching gradle-wrapper.jar for Gradle $GRADLE_VERSION"
-  if ! curl -fsSL --retry 3 --retry-delay 2 \
-      -o "$JAR" \
-      "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}.0/gradle/wrapper/gradle-wrapper.jar" \
-      || ! curl -fsSL --retry 3 --retry-delay 2 \
-        -o "$JAR" \
-        "https://github.com/gradle/gradle/raw/v${GRADLE_VERSION}/gradle/wrapper/gradle-wrapper.jar"; then
-    echo "Download failed; falling back to a locally installed Gradle"
-    rm -f "$JAR"
+  fetched=0
+  for url in \
+    "https://github.com/gradle/gradle/raw/v${GRADLE_VERSION}.0/gradle/wrapper/gradle-wrapper.jar" \
+    "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}.0/gradle/wrapper/gradle-wrapper.jar" \
+    "https://github.com/gradle/gradle/raw/v${GRADLE_VERSION}/gradle/wrapper/gradle-wrapper.jar"; do
+    if curl -fsSL --retry 2 --retry-delay 2 --max-time 60 -o "$JAR.part" "$url"; then
+      mv "$JAR.part" "$JAR"; fetched=1; echo "  ok: $url"; break
+    fi
+    echo "  miss: $url"
+  done
+  rm -f "$JAR.part"
+
+  if [[ "$fetched" -ne 1 ]]; then
+    # Fallback 1: the Flutter SDK ships a wrapper jar in its artifact cache.
+    FLUTTER_ROOT_GUESS="${FLUTTER_ROOT:-$(dirname "$(dirname "$(command -v flutter 2>/dev/null || echo /nonexistent/flutter)")")}"
+    for candidate in \
+      "$FLUTTER_ROOT_GUESS/bin/cache/artifacts/gradle_wrapper/gradle/wrapper/gradle-wrapper.jar" \
+      "$HOME/flutter/bin/cache/artifacts/gradle_wrapper/gradle/wrapper/gradle-wrapper.jar"; do
+      if [[ -s "$candidate" ]]; then
+        cp "$candidate" "$JAR"
+        echo "  copied from Flutter cache: $candidate"
+        fetched=1
+        break
+      fi
+    done
+  fi
+
+  if [[ "$fetched" -ne 1 ]]; then
+    # Fallback 2: a locally installed Gradle can generate the wrapper itself.
     if command -v gradle >/dev/null 2>&1; then
+      echo "Download failed; generating the wrapper with local Gradle"
       (cd "$ANDROID_DIR" && gradle wrapper --gradle-version "$GRADLE_VERSION")
     else
-      echo "No Gradle available. Install Gradle $GRADLE_VERSION or run: flutter build apk (which bootstraps it)" >&2
-      exit 1
+      # Not fatal: `flutter build apk` injects its own bundled wrapper when
+      # gradle/wrapper/gradle-wrapper.jar is missing.
+      echo "::warning::Could not fetch gradle-wrapper.jar; Flutter will inject its bundled wrapper." 
     fi
   fi
 fi

@@ -20,11 +20,16 @@ concurrency:
 permissions:
   contents: read
 
+# TEMPORARY diagnostics: lets the failing step publish its output as a commit
+# comment. Remove contents:write (and the publish step) once CI is green.
+
 jobs:
   lint-and-test:
     name: Lint, test & Docker build
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: backend

@@ -113,7 +113,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     if (!mounted) return;
                     setState(() => _blocked = !_blocked);
                   } catch (_) {
-                    if (mounted) MiyuDialogs.toast(context, 'Action failed');
+                    if (context.mounted) MiyuDialogs.toast(context, 'Action failed');
                   }
                 } else if (value == 'report') {
                   final reason = await MiyuDialogs.promptText(
@@ -124,13 +124,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     maxLength: 500,
                     confirmLabel: 'Report',
                   );
-                  if (reason == null || reason.length < 3 || !mounted) return;
+                  if (reason == null || reason.length < 3 || !context.mounted) return;
                   final reportContext = context;
                   try {
                     await ref.read(chatRepositoryProvider).reportUser(user.id, reason);
-                    if (mounted) MiyuDialogs.toast(reportContext, 'Report submitted');
+                    if (reportContext.mounted) MiyuDialogs.toast(reportContext, 'Report submitted');
                   } catch (_) {
-                    if (mounted) MiyuDialogs.toast(reportContext, 'Could not submit the report');
+                    if (reportContext.mounted) MiyuDialogs.toast(reportContext, 'Could not submit the report');
                   }
                 }
               },
@@ -267,7 +267,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                               if (!mounted) return;
                               setState(() => _blocked = false);
                             } catch (_) {
-                              if (mounted) MiyuDialogs.toast(context, 'Could not unblock');
+                              if (context.mounted) MiyuDialogs.toast(context, 'Could not unblock');
                             }
                           },
                           child: Text('Unblock ${user.displayName}'),

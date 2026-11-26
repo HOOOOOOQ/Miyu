@@ -200,7 +200,7 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                           final error = await ref
                               .read(groupControllerProvider.notifier)
                               .update(group.id, {'name': name});
-                          if (error != null && mounted) {
+                          if (error != null && errorContext.mounted) {
                             await MiyuDialogs.showError(errorContext, error);
                           }
                         }
@@ -256,11 +256,11 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                       confirmLabel: 'Leave',
                       destructive: true,
                     );
-                    if (!confirmed || !mounted) return;
+                    if (!confirmed || !context.mounted) return;
                     final router = GoRouter.of(context);
                     final messengerContext = context;
                     final error = await ref.read(groupControllerProvider.notifier).leave(group.id);
-                    if (!mounted) return;
+                    if (!messengerContext.mounted) return;
                     if (error != null) {
                       await MiyuDialogs.showError(messengerContext, error);
                     } else {
@@ -282,11 +282,11 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                         confirmLabel: 'Delete',
                         destructive: true,
                       );
-                      if (!confirmed || !mounted) return;
+                      if (!confirmed || !context.mounted) return;
                       final router = GoRouter.of(context);
                       final messengerContext = context;
                       final error = await ref.read(groupControllerProvider.notifier).delete(group.id);
-                      if (!mounted) return;
+                      if (!messengerContext.mounted) return;
                       if (error != null) {
                         await MiyuDialogs.showError(messengerContext, error);
                       } else {

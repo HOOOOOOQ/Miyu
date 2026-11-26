@@ -126,6 +126,9 @@ jobs:
           APP_VERSION: ${{ vars.APP_VERSION }}
           GOOGLE_SERVER_CLIENT_ID: ${{ vars.GOOGLE_SERVER_CLIENT_ID }}
         run: |
+          # pipefail: without it `| tee` returns tee's status and a failed
+          # build is reported as success.
+          set -o pipefail
           flutter build apk --release --no-pub \
             --dart-define=API_BASE_URL="${API_BASE_URL:-https://api.miyu.app}" \
             --dart-define=SOCKET_URL="${SOCKET_URL:-https://api.miyu.app}" \
@@ -149,25 +152,18 @@ jobs:
 
       - name: Verify APK output
         id: apk
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Flutter moved the output path between versions, so discover it.
-          echo "--- all .apk files under build/ ---"
-          find build -type f -name "*.apk" -exec ls -lh {} \; || true
-          APK=$(find build -type f \( -name "*-release.apk" -o -name "app-release.apk" \) | head -n 1)
+          # Flutter has moved this path between versions, so discover it.
+          echo '--- .apk files under build/ ---'
+          find build -type f -name '*.apk' -exec ls -lh {} \; || true
+          APK=$(find build -type f \( -name '*-release.apk' -o -name 'app-release.apk' \) | head -n 1)
           if [[ -z "$APK" ]]; then
-            REPORT=$(find build -type f -name "*.apk" | head -n 20; echo; find build -type d -maxdepth 6 -name "outputs" | head -n 20)
-            gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-              -f body="### APK discovery failed
-\`\`\`
-${REPORT:-no apk files found}
-\`\`\`" || true
+            echo '::error::No release APK was produced.'
             exit 1
           fi
           echo "apk_path=$APK" >> "$GITHUB_OUTPUT"
           ls -lh "$APK"
-          echo "sha256: $(sha256sum "$APK" | cut -d' ' -f1)"
+          sha256sum "$APK"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

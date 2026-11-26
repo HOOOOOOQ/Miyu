@@ -1,0 +1,64 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+mobile/android/app/google-services.json
+mobile/android/key.properties
+*.jks
+*.keystore
+*.p12
+service-account*.json
+firebase-adminsdk-*.json
+.dart_tool/credentials.json
+
+# ---- Flutter / Dart ----
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/build/
+mobile/.flutter_build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/windows/flutter/ephemeral/
+mobile/.idea/
+mobile/*.iml
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/gradle/wrapper/gradle-wrapper.jar
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/key.properties
+mobile/android/app/google-services.json
+mobile/coverage/
+
+# ---- Node / backend ----
+backend/node_modules/
+backend/npm-debug.log*
+backend/yarn-error.log*
+backend/coverage/
+backend/.eslintcache
+backend/dist/
+backend/tmp/
+backend/uploads/
+
+# ---- Editors / OS ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# ---- Misc ----
+*.log
+*.tmp
+dist/
+.jest/

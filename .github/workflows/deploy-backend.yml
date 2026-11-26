@@ -1,0 +1,43 @@
+name: Deploy backend (disabled until configured)
+
+# This workflow intentionally does nothing until a hosting provider and
+# credentials are configured. GitHub Actions cannot deploy a Node.js service to
+# a public host without a target account. See docs/DEPLOYMENT.md for options
+# (Render, Railway, Fly.io, a VPS with Docker, etc.).
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY to confirm you have configured the host secrets"
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.inputs.confirm == 'DEPLOY' && vars.BACKEND_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t miyu-backend:${{ github.sha }} backend
+
+      - name: Push to registry
+        if: ${{ secrets.REGISTRY_HOST != '' }}
+        env:
+          REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
+          docker tag miyu-backend:${{ github.sha }} "${REGISTRY_HOST}/miyu-backend:${{ github.sha }}"
+          docker push "${REGISTRY_HOST}/miyu-backend:${{ github.sha }}"
+
+      - name: Placeholder deployment hook
+        run: |
+          echo "Image built and pushed (when registry secrets exist)."
+          echo "Add your host's deploy step here (e.g. Render deploy hook)."

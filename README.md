@@ -28,7 +28,7 @@ Miyu is a full-stack instant messenger, not a UI mockup:
 | **Media** | Images, video, documents, voice notes uploaded through the backend to Cloudinary (25 MB cap) |
 | **Push** | Firebase Cloud Messaging channels for messages, calls, groups; token lifecycle managed |
 | **CI/CD** | GitHub Actions: analyze + test + release APK on every push, signed releases on tags |
-| **Tests** | 28 backend tests + Flutter unit/widget tests, all executed locally in this repo |
+| **Tests** | 37 backend tests (real MongoDB in CI) + Flutter analyzer & widget tests — all green in GitHub Actions |
 
 ### Feature checklist
 
@@ -156,6 +156,7 @@ Setup guides:
 | [`docs/GITHUB_SECRETS.md`](docs/GITHUB_SECRETS.md) | Every secret/variable, why it is split, CLI setup |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Render/Railway/Fly/VPS, nginx WebSocket proxy, production checklist |
 | [`docs/INSTALLATION.md`](docs/INSTALLATION.md) | Local toolchain and troubleshooting |
+| [`docs/TESTING.md`](docs/TESTING.md) | Executed test evidence, what CI caught, what still needs your accounts |
 
 ---
 
@@ -230,11 +231,7 @@ falls back to debug signing and prints which mode it used.
 
 ## Testing
 
-### Backend (executed in this repo)
-
-```
-28 passed, 4 suites  — tokens, validation, username, health/error handling
-```
+### Backend
 
 ```bash
 cd backend
@@ -242,18 +239,40 @@ npm run lint          # ESLint, 0 problems
 npm test              # jest
 ```
 
-`tests/auth.test.js` is a DB-backed suite (token rotation, reuse detection,
-logout). It uses `mongodb-memory-server`; on machines/networks where the mongod
-binary cannot be downloaded it self-skips with a warning unless
-`MIYU_REQUIRE_DB=1` is set. CI and any developer machine with network access run
-it in full.
+**Verified in GitHub Actions (`backend-check.yml`), against a real `mongo:7`
+service container:** `5 suites, 37 tests, all passing` — no skips.
+
+- tokens: signing/verification, tamper & expiry rejection, refresh-type confusion
+- validation: every Zod schema, username sanitising
+- health/errors: routing, auth guards, error envelope
+- auth (DB): access claims, refresh rotation, reuse → family revocation, logout
+- messaging/groups (DB): chat list, send + `clientMessageId` dedupe, pagination,
+  non-participant rejection, edit/react/soft-delete, sender-only ownership,
+  delivered/read receipts + unread reset, group creation, admin promotion,
+  admin-only updates, member removal
+
+`tests/setup/globalMongo.js` resolves the database once per run
+(`MONGODB_URI_TEST`, else `mongodb-memory-server`). When neither is reachable the
+DB suites are reported as **skipped**, never as silently passing, and
+`MIYU_REQUIRE_DB=1` (set in CI) turns a missing database into a hard failure.
 
 ### Flutter
+
+**Verified in GitHub Actions (`android-build.yml`), Flutter 3.32.8 / Dart 3.12:**
+
+| Gate | Result |
+| --- | --- |
+| `dart format --set-exit-if-changed` | advisory (reports drift only) |
+| `flutter analyze --no-pub` | ✅ **0 issues** (no errors, warnings or infos) |
+| `flutter test --no-pub` | ✅ all widget/unit tests pass |
+| `flutter build apk --release` | ✅ **51.2 MB release APK built** |
+| Artifact `miyu-apk-<sha>` | ✅ uploaded, downloadable |
 
 ```bash
 cd mobile
 flutter analyze
 flutter test
+flutter build apk --release
 ```
 
 Covered: model parsing (users, chats, messages, calls), message bubble rendering
@@ -267,7 +286,10 @@ preview/badge derivation.
 | --- | --- |
 | Backend boots, health endpoint, auth guards | ✅ automated |
 | JWT signing/verification, tamper & expiry rejection | ✅ automated |
-| Refresh rotation + reuse → family revocation | ✅ automated (with MongoDB) |
+| Refresh rotation + reuse → family revocation | ✅ automated (real MongoDB in CI) |
+| Chats/messages/groups REST contract (8 cases) | ✅ automated (real MongoDB in CI) |
+| `flutter analyze` clean | ✅ CI |
+| Release APK compiles & uploads | ✅ CI (51.2 MB artifact) |
 | Zod request validation across all modules | ✅ automated |
 | Flutter model/widget rendering & theming | ✅ automated |
 | Google login end-to-end | ⚠️ needs your OAuth credentials — not run here |
@@ -297,9 +319,10 @@ claimed as passed without execution.
    than one backend instance.
 6. **Formatting is advisory in CI** — `dart format --set-exit-if-changed` reports
    drift as a warning so a formatting nit can never block an APK.
-7. **Flutter SDK unavailable in this sandbox** — `flutter analyze`/`flutter test`
-   could not be executed here (no pub.dev access). The CI workflow is the
-   authoritative gate; run the two commands locally or in Actions.
+7. **Formatting is advisory in CI** — see item 6; run `dart format lib test`
+   locally before pushing to keep the diff noise-free.
+8. **Release APK is debug-signed unless you add keystore secrets** — see
+   `docs/GITHUB_SECRETS.md` and `release.yml`.
 
 ---
 

@@ -4,6 +4,11 @@ Everything below was executed on GitHub-hosted runners for branch
 `arena/f49e81c3-miyu`. Every row corresponds to a green workflow run you can
 open on the repository's **Actions** tab; nothing here is claimed without one.
 
+| Gate | Commit | Workflow |
+| --- | --- | --- |
+| Backend (37 tests, MongoDB service) | `6ba2416` | `backend-check.yml` |
+| Mobile (analyze, tests, APK) | `d199706` | `android-build.yml` |
+
 ## 1. Backend — `backend-check.yml`
 
 Environment: `ubuntu-latest`, Node 20, `mongo:7` service container,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/miyu_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../models/call.dart';
 import '../../models/user.dart';
 import '../../providers/call_provider.dart';
 import '../../providers/chat_list_provider.dart';
@@ -266,7 +267,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                               if (mounted) MiyuDialogs.toast(context, 'Could not unblock');
                             }
                           },
-                          child: const Text('Unblock ${user.displayName}'),
+                          child: Text('Unblock ${user.displayName}'),
                         ),
                       ],
                     ],

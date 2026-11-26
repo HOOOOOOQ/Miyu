@@ -115,9 +115,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: MiyuRoutes.call,
-        pageBuilder: (_, state) => PageRouteBuilder(
+        pageBuilder: (_, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
           opaque: false,
-          pageBuilder: (_, __, ___) => const CallScreen(),
+          child: const CallScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) =>
               FadeTransition(opacity: animation, child: child),
         ),

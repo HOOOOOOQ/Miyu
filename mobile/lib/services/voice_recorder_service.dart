@@ -61,7 +61,7 @@ class VoiceRecorderService {
   }
 
   Future<void> dispose() async {
-    await _ticker?.cancel();
+    _ticker?.cancel();
     if (!_tickController.isClosed) await _tickController.close();
     await _recorder.dispose();
   }

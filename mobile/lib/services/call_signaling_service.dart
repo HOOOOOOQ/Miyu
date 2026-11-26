@@ -10,6 +10,7 @@ import 'socket_service.dart';
 class IceConfigService {
   IceConfigService({required ApiClient api}) : _api = api;
 
+  final ApiClient _api;
   List<Map<String, dynamic>>? _cached;
   DateTime? _cachedAt;
 

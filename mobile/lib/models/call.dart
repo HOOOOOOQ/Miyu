@@ -43,6 +43,7 @@ class CallSession {
     this.duration = 0,
     this.peer,
     this.direction = 'outgoing',
+    this.createdAt,
   });
 
   final String id;
@@ -57,6 +58,11 @@ class CallSession {
   final int duration;
   final User? peer;
   final String direction; // incoming | outgoing
+  final DateTime? createdAt;
+
+  /// Timestamp used by the history list: the call's creation time, falling
+  /// back to when it started/ended for records created before that field.
+  DateTime? get sortTime => createdAt ?? startedAt ?? answeredAt ?? endedAt;
 
   bool get isVideo => callType == CallType.video;
   bool get isRinging => status == CallStatus.ringing;
@@ -87,6 +93,9 @@ class CallSession {
       endedAt: json['endedAt'] == null ? null : DateTime.tryParse(json['endedAt'].toString())?.toLocal(),
       duration: json['duration'] is num ? (json['duration'] as num).toInt() : 0,
       direction: (json['direction'] ?? 'outgoing').toString(),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.tryParse(json['createdAt'].toString())?.toLocal(),
     );
   }
 
@@ -103,6 +112,7 @@ class CallSession {
         duration: duration,
         peer: peer ?? this.peer,
         direction: direction,
+        createdAt: createdAt,
       );
 }
 

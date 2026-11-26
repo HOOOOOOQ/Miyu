@@ -131,7 +131,7 @@ class _ChatComposerState extends State<ChatComposer> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (widget.replyTo != null) _ContextBar.reply(reply: widget.replyTo!, onClose: widget.onCancelReply),
-            if (widget.editing != null) _ContextBar.edit(message: widget.editing!, onClose: widget.onCancelEdit),
+            if (widget.editing != null) _ContextBar.edit(editing: widget.editing!, onClose: widget.onCancelEdit),
             if (_showAttach) _AttachTray(
               onImage: () {
                 setState(() => _showAttach = false);

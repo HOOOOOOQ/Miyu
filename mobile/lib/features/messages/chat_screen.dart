@@ -9,6 +9,7 @@ import 'package:open_filex/open_filex.dart';
 
 import '../../core/theme/miyu_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../models/call.dart';
 import '../../models/chat.dart';
 import '../../models/message.dart';
 import '../../providers/call_provider.dart';
@@ -621,7 +622,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           currentUserId: userId,
           showAvatar: showAvatar,
           showSenderName: (chat?.isGroup ?? false) && !isMine && showAvatar,
-          highlighted: _highlightedMessageId == message.id,
+          highlighted: _highlightedMessageId != null && _highlightedMessageId == message.id,
           onLongPress: () => _showMessageActions(message),
           onDoubleTap: () => ref
               .read(messageControllerProvider(widget.chatId).notifier)

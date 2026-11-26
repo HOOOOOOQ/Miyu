@@ -74,7 +74,10 @@ jobs:
           }
 
       - name: Static analysis
-        run: flutter analyze --no-pub 2>&1 | tee /tmp/analyze.log
+        # `set -o pipefail` keeps a real analyzer failure from being masked by tee.
+        run: |
+          set -o pipefail
+          flutter analyze --no-pub 2>&1 | tee /tmp/analyze.log
 
       - name: Publish analyzer output
         if: failure()
@@ -91,7 +94,9 @@ jobs:
             -f body="$(cat /tmp/body.md)" || true
 
       - name: Unit & widget tests
-        run: flutter test --no-pub --reporter expanded 2>&1 | tee /tmp/test.log
+        run: |
+          set -o pipefail
+          flutter test --no-pub --reporter expanded 2>&1 | tee /tmp/test.log
 
       - name: Publish test output
         if: failure()

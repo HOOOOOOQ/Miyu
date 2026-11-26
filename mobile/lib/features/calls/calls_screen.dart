@@ -312,7 +312,7 @@ class _CallTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${Formatters.chatTimestamp(call.createdAt)} · $subtitle',
+                            '${Formatters.chatTimestamp(call.sortTime)} · $subtitle',
                             style: TextStyle(
                               fontSize: 12,
                               color: missed

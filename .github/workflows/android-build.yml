@@ -2,7 +2,7 @@ name: Android build
 
 on:
   push:
-    branches: [main]
+    branches: [main, "arena/**"]
     paths:
       - "mobile/**"
       - ".github/workflows/android-build.yml"

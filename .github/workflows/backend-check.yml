@@ -2,7 +2,7 @@ name: Backend checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, "arena/**"]
     paths:
       - "backend/**"
       - ".github/workflows/backend-check.yml"

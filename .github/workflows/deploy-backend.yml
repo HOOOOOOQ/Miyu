@@ -5,6 +5,7 @@ name: Deploy backend (disabled until configured)
 # a public host without a target account. See docs/DEPLOYMENT.md for options
 # (Render, Railway, Fly.io, a VPS with Docker, etc.).
 on:
+  # Manual only: this workflow is a template and cannot deploy without a host.
   workflow_dispatch:
     inputs:
       confirm:
@@ -26,13 +27,16 @@ jobs:
       - name: Build backend image
         run: docker build -t miyu-backend:${{ github.sha }} backend
 
-      - name: Push to registry
-        if: ${{ secrets.REGISTRY_HOST != '' }}
+      - name: Push to registry (skipped when not configured)
         env:
           REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
           REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         run: |
+          if [[ -z "${REGISTRY_HOST}" || -z "${REGISTRY_USER}" || -z "${REGISTRY_PASSWORD}" ]]; then
+            echo "::notice::Registry secrets not set — skipping image push."
+            exit 0
+          fi
           echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
           docker tag miyu-backend:${{ github.sha }} "${REGISTRY_HOST}/miyu-backend:${{ github.sha }}"
           docker push "${REGISTRY_HOST}/miyu-backend:${{ github.sha }}"

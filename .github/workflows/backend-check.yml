@@ -20,16 +20,11 @@ concurrency:
 permissions:
   contents: read
 
-# TEMPORARY diagnostics: lets the failing step publish its output as a commit
-# comment. Remove contents:write (and the publish step) once CI is green.
-
 jobs:
   lint-and-test:
     name: Lint, test & Docker build
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    permissions:
-      contents: write
     defaults:
       run:
         working-directory: backend
@@ -74,24 +69,9 @@ jobs:
         run: node -e "require('./src/config/env'); require('./src/app'); console.log('config OK')"
 
       - name: Run tests (real MongoDB service container)
-        # MIYU_REQUIRE_DB=1 turns a missing database into a hard failure, so the
-        # auth suite can never silently skip in CI.
-        run: |
-          set -o pipefail
-          npm test -- --runInBand 2>&1 | tee /tmp/test.log
-
-      - name: Publish failure details as a commit comment
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          {
-            echo '```'
-            tail -n 120 /tmp/test.log 2>/dev/null || echo 'no log captured'
-            echo '```'
-          } > /tmp/body.md
-          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(cat /tmp/body.md)" || true
+        # MIYU_REQUIRE_DB=1 turns a missing database into a hard failure, so DB
+        # suites can never silently skip in CI.
+        run: npm test -- --runInBand
 
       - name: Build Docker image
         run: docker build -t miyu-backend:ci .

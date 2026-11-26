@@ -20,6 +20,8 @@ concurrency:
 permissions:
   contents: read
 
+# TEMPORARY diagnostics: publish analyze failures as a commit comment.
+
 env:
   FLUTTER_VERSION: "3.32.8"
   JAVA_VERSION: "17"
@@ -29,6 +31,8 @@ jobs:
     name: Analyze, test & build release APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: mobile
@@ -70,7 +74,21 @@ jobs:
           }
 
       - name: Static analysis
-        run: flutter analyze --no-pub
+        run: flutter analyze --no-pub 2>&1 | tee /tmp/analyze.log
+
+      - name: Publish analyzer output
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo '### flutter analyze'
+            echo '```'
+            grep -E "error •|warning •" /tmp/analyze.log 2>/dev/null | head -n 80 || tail -n 60 /tmp/analyze.log
+            echo '```'
+          } > /tmp/body.md
+          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
+            -f body="$(cat /tmp/body.md)" || true
 
       - name: Unit & widget tests
         run: flutter test --no-pub --reporter expanded

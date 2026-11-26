@@ -240,6 +240,13 @@ class ApiClient {
           return ApiException.network('No internet connection.');
         }
         return ApiException(message: error.message ?? 'Something went wrong');
+      // Handles any enum value added by a future dio release without breaking
+      // the build (Dart 3 treats switched enums as exhaustive).
+      default:
+        return ApiException(
+          message: error.message ?? 'Something went wrong',
+          statusCode: error.response?.statusCode,
+        );
     }
   }
 }

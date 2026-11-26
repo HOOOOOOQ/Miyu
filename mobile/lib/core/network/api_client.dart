@@ -15,15 +15,15 @@ typedef SessionExpiredCallback = Future<void> Function();
 ///  * normalises every failure into [ApiException],
 ///  * notifies the app when the session is truly gone.
 class ApiClient {
-  ApiClient({required SecureStore secureStore, Dio? dio})
+  ApiClient({required SecureStore secureStore, String? serverUrl, Dio? dio})
       : _secureStore = secureStore,
-        _dio = dio ?? _buildDio(),
+        _dio = dio ?? _buildDio(AppConfig.resolvedApiBaseUrl(serverUrl)),
         // Refresh uses its own client so a stale bearer token is never resent.
-        _authDio = _buildDio();
+        _authDio = _buildDio(AppConfig.resolvedApiBaseUrl(serverUrl));
 
-  static Dio _buildDio() => Dio(
+  static Dio _buildDio(String baseUrl) => Dio(
         BaseOptions(
-          baseUrl: '${AppConfig.normalizedApiBaseUrl}/api',
+          baseUrl: '$baseUrl/api',
           connectTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(seconds: 30),
           sendTimeout: const Duration(seconds: 60),

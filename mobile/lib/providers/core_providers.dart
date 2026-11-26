@@ -19,14 +19,28 @@ final preferencesProvider = Provider<Preferences>((ref) {
 
 final secureStoreProvider = Provider<SecureStore>((ref) => SecureStore());
 
+/// Backend host the app talks to: the value saved in Settings when present,
+/// otherwise the URL compiled in with --dart-define. Changing it rebuilds
+/// [apiClientProvider] and [socketServiceProvider], which is why the app asks
+/// the user to restart (or sign out) after editing it.
+final serverUrlProvider = StateProvider<String?>((ref) {
+  return ref.watch(preferencesProvider).serverUrlOverride;
+});
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient(secureStore: ref.watch(secureStoreProvider));
+  final client = ApiClient(
+    secureStore: ref.watch(secureStoreProvider),
+    serverUrl: ref.watch(serverUrlProvider),
+  );
   ref.onDispose(() {});
   return client;
 });
 
 final socketServiceProvider = Provider<SocketService>((ref) {
-  final service = SocketService(secureStore: ref.watch(secureStoreProvider));
+  final service = SocketService(
+    secureStore: ref.watch(secureStoreProvider),
+    serverUrl: ref.watch(serverUrlProvider),
+  );
   ref.onDispose(service.dispose);
   return service;
 });

@@ -2,6 +2,7 @@
 
 const { Server } = require('socket.io');
 const { verifyAccessToken } = require('../utils/tokens');
+const { isConnected } = require('../config/db');
 const { User, Conversation } = require('../models');
 const messageService = require('../services/messageService');
 const callService = require('../services/callService');
@@ -425,8 +426,14 @@ function initSocket(httpServer) {
   });
 
   // Sweep stale ringing calls every 20s so history does not fill with zombie calls.
+  // Skipped while the database is disconnected: mongoose buffers the query for
+  // 10s and then throws, which used to fill the panel console with the same
+  // "buffering timed out" error every 20 seconds during a DB outage.
   const sweeper = setInterval(() => {
-    callService.expireStaleCalls().catch((err) => logger.warn({ err: err.message }, '[call] sweep failed'));
+    if (!isConnected()) return;
+    callService
+      .expireStaleCalls()
+      .catch((err) => logger.warn({ err: err.message }, '[call] sweep failed'));
   }, 20_000);
   if (sweeper.unref) sweeper.unref();
 

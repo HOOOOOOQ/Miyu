@@ -155,6 +155,7 @@ Setup guides:
 | [`docs/WEBRTC_SETUP.md`](docs/WEBRTC_SETUP.md) | STUN/TURN (Metered & coturn), permissions, two-device test plan |
 | [`docs/GITHUB_SECRETS.md`](docs/GITHUB_SECRETS.md) | Every secret/variable, why it is split, CLI setup |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Render/Railway/Fly/VPS, nginx WebSocket proxy, production checklist |
+| [`docs/PTERODACTYL.md`](docs/PTERODACTYL.md) | **Live deploy target** — Pterodactyl panel, `play.notmemc.my.id:3186`: startup command, env vars, verification |
 | [`docs/INSTALLATION.md`](docs/INSTALLATION.md) | Local toolchain and troubleshooting |
 | [`docs/TESTING.md`](docs/TESTING.md) | Executed test evidence, what CI caught, what still needs your accounts |
 

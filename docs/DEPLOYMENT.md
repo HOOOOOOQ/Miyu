@@ -1,5 +1,9 @@
 # Deploying the Miyu backend
 
+> **This project is deployed on Pterodactyl** (`play.notmemc.my.id:3186`).
+> Step-by-step for that host: [PTERODACTYL.md](PTERODACTYL.md). The options
+> below remain valid for any other host.
+
 GitHub Actions builds the backend image but **does not** and cannot deploy it to
 a public host without your account. Choose one of the options below, configure
 the secrets, then enable `deploy-backend.yml`.

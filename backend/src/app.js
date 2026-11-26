@@ -20,6 +20,9 @@ function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
+        // No Origin header = native app (Flutter/Dart), not a browser. Those
+        // calls carry a Bearer token, not a cookie, so CORS cannot protect
+        // them anyway; blocking them would break the mobile client.
         if (!origin || env.corsOrigins.includes('*') || env.corsOrigins.includes(origin)) {
           return callback(null, true);
         }

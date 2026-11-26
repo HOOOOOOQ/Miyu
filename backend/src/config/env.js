@@ -12,8 +12,13 @@ function required(name) {
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT || 5000),
-  apiBaseUrl: process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5000}`,
+  // Pterodactyl exposes the allocated port as SERVER_PORT and often does not
+  // set PORT. Without this fallback the API would listen on 5000, which is not
+  // the port the panel routes traffic to.
+  port: Number(process.env.PORT || process.env.SERVER_PORT || 5000),
+  apiBaseUrl:
+    process.env.API_BASE_URL ||
+    `http://localhost:${process.env.PORT || process.env.SERVER_PORT || 5000}`,
   mongoUri: required('MONGODB_URI'),
   jwtAccessSecret: required('JWT_ACCESS_SECRET'),
   jwtRefreshSecret: required('JWT_REFRESH_SECRET'),

@@ -53,9 +53,15 @@ enum SocketConnectionState { idle, connecting, connected, disconnected, failed }
 /// Thin, reconnect-aware wrapper around socket_io_client.
 /// Authentication happens once at connect time with the Miyu access token.
 class SocketService {
-  SocketService({required SecureStore secureStore}) : _secureStore = secureStore;
+  SocketService({required SecureStore secureStore, String? serverUrl})
+      : _secureStore = secureStore,
+        _serverUrl = AppConfig.resolvedSocketUrl(serverUrl);
 
   final SecureStore _secureStore;
+
+  /// Resolved at construction from the compiled default plus any Settings
+  /// override, so a rebuilt provider container picks up a new host.
+  final String _serverUrl;
   io.Socket? _socket;
 
   final _stateController = StreamController<SocketConnectionState>.broadcast();
@@ -82,7 +88,7 @@ class SocketService {
     }
     _setState(SocketConnectionState.connecting);
     final socket = io.io(
-      AppConfig.normalizedSocketUrl,
+      _serverUrl,
       io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()

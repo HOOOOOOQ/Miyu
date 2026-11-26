@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
 import '../../core/theme/miyu_colors.dart';
+import '../../providers/core_providers.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../routing/routes.dart';
@@ -45,6 +46,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ThemeMode.light => 'Light',
         ThemeMode.dark => 'Dark',
       };
+
+  /// Lets a tester repoint the APK at another backend without rebuilding.
+  /// Needed because the compiled default (a Pterodactyl host on port 3186) is
+  /// unreachable from some networks, and because a wrong default must not
+  /// require a new APK to fix.
+  Future<void> _editServer() async {
+    final preferences = ref.read(preferencesProvider);
+    final controller = TextEditingController(
+      text: preferences.serverUrlOverride ?? AppConfig.normalizedApiBaseUrl,
+    );
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Server address'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Miyu talks to this backend for messages, calls and media. '
+              'Change it only if you run your own server.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Theme.of(dialogContext).brightness == Brightness.dark
+                    ? MiyuColors.darkTextSecondary
+                    : MiyuColors.lightTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              autocorrect: false,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                hintText: 'http://192.168.1.10:5000',
+                labelText: 'Base URL',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('__reset__'),
+            child: const Text('Use default'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result == null) return;
+
+    if (result == '__reset__') {
+      await preferences.setServerUrlOverride(null);
+      ref.read(serverUrlProvider.notifier).state = null;
+      if (!mounted) return;
+      MiyuDialogs.toast(context, 'Using the built-in server address');
+      return;
+    }
+
+    final normalized = AppConfig.normalizeServerInput(result);
+    if (normalized == null) {
+      if (!mounted) return;
+      MiyuDialogs.toast(context, 'That does not look like a server address');
+      return;
+    }
+    await preferences.setServerUrlOverride(normalized);
+    ref.read(serverUrlProvider.notifier).state = normalized;
+    if (!mounted) return;
+    MiyuDialogs.toast(context, 'Server set to $normalized — restart Miyu to reconnect');
+  }
 
   Future<void> _logout() async {
     final confirmed = await MiyuDialogs.confirm(
@@ -168,6 +246,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 );
                 if (allowed == null) return;
               },
+            ),
+            const Divider(height: 1),
+            SettingsTile(
+              icon: Icons.dns_outlined,
+              title: 'Server address',
+              subtitle: ref.watch(serverUrlProvider) ?? AppConfig.normalizedApiBaseUrl,
+              onTap: _editServer,
             ),
             const Divider(height: 1),
             SettingsTile(

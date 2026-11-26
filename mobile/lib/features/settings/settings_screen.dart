@@ -52,9 +52,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// unreachable from some networks, and because a wrong default must not
   /// require a new APK to fix.
   Future<void> _editServer() async {
-    final preferences = ref.read(preferencesProvider);
     final controller = TextEditingController(
-      text: preferences.serverUrlOverride ?? AppConfig.normalizedApiBaseUrl,
+      text: ref.read(serverUrlProvider) ?? AppConfig.normalizedApiBaseUrl,
     );
     final result = await showDialog<String?>(
       context: context,
@@ -105,7 +104,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (result == null) return;
 
     if (result == '__reset__') {
-      await preferences.setServerUrlOverride(null);
+      await ref.read(preferencesProvider).setServerUrlOverride(null);
       ref.read(serverUrlProvider.notifier).state = null;
       if (!mounted) return;
       MiyuDialogs.toast(context, 'Using the built-in server address');
@@ -118,10 +117,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       MiyuDialogs.toast(context, 'That does not look like a server address');
       return;
     }
-    await preferences.setServerUrlOverride(normalized);
+    await ref.read(preferencesProvider).setServerUrlOverride(normalized);
     ref.read(serverUrlProvider.notifier).state = normalized;
     if (!mounted) return;
-    MiyuDialogs.toast(context, 'Server set to $normalized — restart Miyu to reconnect');
+    MiyuDialogs.toast(
+      context,
+      'Server set to $normalized — restart Miyu to reconnect',
+    );
   }
 
   Future<void> _logout() async {

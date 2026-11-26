@@ -70,7 +70,7 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                   child: ListView.builder(
                     itemCount: candidates.length,
                     itemBuilder: (context, index) {
-                      final user = candidates[index] as User;
+                      final user = candidates[index];
                       return CheckboxListTile(
                         value: selected.contains(user.id),
                         activeColor: MiyuColors.accent,

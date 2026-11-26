@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
 
+import '../../core/errors/api_exception.dart';
 import '../../core/theme/miyu_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/call.dart';
@@ -80,7 +81,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _loadingChat = false;
-        _chatError = 'Could not open this conversation.';
+        _chatError = error is ApiException ? error.friendlyMessage : 'Could not open this conversation.';
       });
     }
   }
@@ -437,7 +438,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final room = ref.watch(messageControllerProvider(widget.chatId));
     final userId = ref.watch(currentUserIdProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Keep the list pinned to the newest message when one arrives.
     ref.listen<ChatRoomState>(messageControllerProvider(widget.chatId), (previous, next) {
@@ -451,6 +451,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     final chat = _chat;
+
+    // Surface a failed conversation load with a retry instead of an empty shell.
+    if (_chatError != null && chat == null) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cloud_off_rounded, size: 42, color: MiyuColors.coral.withValues(alpha: 0.9)),
+                const SizedBox(height: 14),
+                Text(
+                  _chatError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14.5, color: MiyuColors.darkTextSecondary),
+                ),
+                const SizedBox(height: 18),
+                FilledButton(
+                  onPressed: () {
+                    setState(() {
+                      _chatError = null;
+                      _loadingChat = true;
+                    });
+                    _loadChat();
+                  },
+                  child: const Text('Try again'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -608,7 +649,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         }
         final entry = grouped[index];
         if (entry.isDivider) {
-          return _DayDivider(label: entry.label);
+          return _DayDivider(label: entry.label ?? '');
         }
         final message = entry.message!;
         final previous = index + 1 < grouped.length ? grouped[index + 1].message : null;

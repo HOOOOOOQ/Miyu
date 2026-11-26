@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:miyu/core/theme/miyu_theme.dart';
 import 'package:miyu/models/chat.dart';
 import 'package:miyu/models/message.dart';
-import 'package:miyu/models/user.dart';
 import 'package:miyu/shared/widgets/miyu_avatar.dart';
 
 /// Verifies that chat list presentation data (preview text, unread badge,

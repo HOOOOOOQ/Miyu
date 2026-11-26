@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -218,7 +217,6 @@ class _ChatComposerState extends State<ChatComposer> {
 
 class _CircleButton extends StatelessWidget {
   const _CircleButton({
-    super.key,
     required this.icon,
     required this.onTap,
     this.tooltip,

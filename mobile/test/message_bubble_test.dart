@@ -129,7 +129,7 @@ void main() {
     });
 
     testWidgets('system messages render as centered notices', (tester) async {
-      final system = message(
+      final system = sampleMessage(
         type: MessageType.system,
         content: 'created the group "Crew"',
         senderId: 'me',

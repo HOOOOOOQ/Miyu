@@ -181,7 +181,7 @@ class RealtimeCoordinator {
 
   }
 
-  dynamic? _activeMessageController(String conversationId) {
+  dynamic _activeMessageController(String conversationId) {
     if (_ref.read(activeChatIdProvider) != conversationId) return null;
     try {
       return _ref.read(messageControllerProvider(conversationId).notifier);

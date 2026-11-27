@@ -39,18 +39,7 @@ jobs:
         run: flutter doctor -v
 
       - name: Flutter pub get
-        run: |
-          set -o pipefail
-          {
-            echo "=== flutter pub get output (diagnostic) ==="
-            echo "CWD=$(pwd)"
-            ls -la
-            cat pubspec.yaml | head -30
-            flutter pub get 2>&1 | tail -60
-          } >> "$GITHUB_STEP_SUMMARY"
-          code=${PIPESTATUS[0]:-$?}
-          echo "PUBGET_EXIT=$code" >> "$GITHUB_STEP_SUMMARY"
-          exit $code
+        run: flutter pub get
 
       - name: Dart format check
         run: dart format --output=none --set-exit-if-changed lib test

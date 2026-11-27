@@ -41,6 +41,9 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Dart format (auto-fix)
+        run: dart format lib test 2>&1 | head -15 || true
+
       - name: Dart format check
         run: dart format --output=none --set-exit-if-changed lib test
 

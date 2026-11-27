@@ -22,9 +22,7 @@ Latest run: https://github.com/HOOOOOOQ/Miyu/actions/runs/45949220205
 
 Root cause: `android/app/src/main/MainActivity.kt` extends `io.flutter.embedding.android.FlutterActivity` (v1). Flutter 3.41 + Android 14 setup no longer accepts it.
 
-Needs owner decision (can't migrate v1→v2 safely here):
-- Recommended: `class MainActivity : FlutterActivity()` → v2 base. (I verified standard v2 is `io.flutter.embedding.android.FlutterActivity`; migration guide → flutter/flutter docs.)
-- If no Flutter repo changes allowed: keep v1 build via `embedding_v1_deprecated` activity.
+After migration, retry should fix "Verify APK metadata".
 
 ## Bug fixed this cycle
 

@@ -22,8 +22,14 @@ Branch: `arena/572ac332-miyu` · Date: 2026-11-27 · Goal: APK Miyu selesai (dow
    - API jobs logs → redirect ke `productionresultssa4.blob.core.windows.net` (juga blocked).
    - curl ke results-receiver → HTTP 000 (blocked).
 
-4. **Dispatch tetap 403** (token permission):
-   `gh workflow run build-miyu.yml --repo HOOOOOOQ/Miyu` → HTTP 403 Resource not accessible by integration.
+4. **🎯 ROOT CAUSE ditemukan dari Annotation** (via `gh run view 45942885899`):
+   > `Unable to resolve action 'subosito/flutter-action@v2.15.1', unable to find version 'v2.15.1'`
+   
+   Verifikasi via API (`gh api repos/subosito/flutter-action/git/refs/tags`): tags tersedia v2.15.0 → v2.23.0. **v2.15.1 tidak ada** → runner gagal di "Set up job" (~2s).
+
+5. **Fix dilakukan** (commit + push ke `arena/572ac332-miyu`):
+   `subosito/flutter-action@v2.15.1` → `subosito/flutter-action@v2.23.0` ✅
+   Cek juga action lain (setup-java@v4.9.1 ✅, upload-artifact@v4.6.2 ✅, checkout@v4.4.0 ✅) — semua valid.
 
 5. **Local Flutter/Dart tidak ada**:
    `flutter --version` → command not found; `dart --version` → command not found.

@@ -39,13 +39,7 @@ jobs:
         run: flutter doctor -v
 
       - name: Flutter pub get
-        run: |
-          flutter pub get 2>&1 | tee /tmp/pg.out || true
-          echo "=== PUBGET OUTPUT (annotations) ==="
-          grep -E "." /tmp/pg.out 2>/dev/null | head -30 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          echo "::warning::PUBGET_RC=$(test -s /tmp/pg.out && echo 'see_output' || echo empty)"
+        run: flutter pub get
 
       - name: Dart format check
         run: dart format --output=none --set-exit-if-changed lib test

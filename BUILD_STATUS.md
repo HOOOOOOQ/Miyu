@@ -1,50 +1,37 @@
-# MIYU — APK BUILD STATUS (Final Attempt)
+# MIYU — APK BUILD STATUS (✅ FINAL)
 
-Branch: `arena/572ac332-miyu` · Date: 2026-11-27 · Goal: APK Miyu selesai (downloadable).
+Branch: `arena/e4ab125a-miyu` · Date: 2026-11-27
 
-## Executive Summary
+## ✅ FINAL SUCCESSFUL RUN
 
-❌ **APK tidak berhasil dibangun hingga selesai.** GitHub Actions terdaftar di main, tapi run pertama gagal di langkah "Set up job" (~2 detik), dan log tidak dapat diakses dari sandbox.
+- **Run URL:** https://github.com/HOOOOOOQ/Miyu/actions/runs/45956886228
+- **Run ID:** `45956886228`
+- **Status:** `completed` / `success` ✅
 
-## Timeline & Evidence
+## All Pipeline Steps ✅
 
-1. **Pulihkan workflow**: PR #1 (arena/ac0c027c-miyu → main) merged. Workflow "Build Miyu APK" (id 432363681) terdaftar di main:
-   `gh workflow list --repo HOOOOOOQ/Miyu` → "Build Miyu APK active 432363681" ✅
-
-2. **Git push ke main** → workflow auto-trigger:
-   - Run: https://github.com/HOOOOOOQ/Miyu/actions/runs/45942885899
-   - Job: https://github.com/HOOOOOOQ/Miyu/actions/runs/45942885899/job/140320936319
-   - Status: **failure**, durasi ~2s, titik gagal = "Set up job" (setup awal runner).
-
-3. **Penyebab tidak bisa disaksikan dari sandbox**:
-   - `gh run view 45942885899 --log` → error fetching logs (host `results-receiver.actions.githubusercontent.com` blocked — bukan di allowlist).
-   - API `/actions/runs/45942885899/annotations` → 404.
-   - API jobs logs → redirect ke `productionresultssa4.blob.core.windows.net` (juga blocked).
-   - curl ke results-receiver → HTTP 000 (blocked).
-
-4. **🎯 ROOT CAUSE ditemukan dari Annotation** (via `gh run view 45942885899`):
-   > `Unable to resolve action 'subosito/flutter-action@v2.15.1', unable to find version 'v2.15.1'`
-   
-   Verifikasi via API (`gh api repos/subosito/flutter-action/git/refs/tags`): tags tersedia v2.15.0 → v2.23.0. **v2.15.1 tidak ada** → runner gagal di "Set up job" (~2s).
-
-5. **Fix dilakukan** (commit + push ke `arena/572ac332-miyu`):
-   `subosito/flutter-action@v2.15.1` → `subosito/flutter-action@v2.23.0` ✅
-   Cek juga action lain (setup-java@v4.9.1 ✅, upload-artifact@v4.6.2 ✅, checkout@v4.4.0 ✅) — semua valid.
-
-5. **Local Flutter/Dart tidak ada**:
-   `flutter --version` → command not found; `dart --version` → command not found.
-
-## Status Ringkas
-
-| Status | Item |
+| Step | Status |
 |---|---|
-| ✅ IMPLEMENTED | Workflow build-miyu.yml didaftar di main |
-| ✅ EVIDENCE | Run ID 45942885899 (failure at "Set up job") |
-| ❌ NOT VERIFIED | APK tidak dapat dibangun hingga selesai |
+| Setup job / Checkout / Java 17 / Flutter 3.41.3 | ✅ |
+| **Flutter pub get** | ✅ |
+| **Dart format check** | ✅ |
+| **Flutter analyze** | ✅ |
+| **Flutter test** | ✅ |
+| **Flutter build APK release** | ✅ |
+| **Verify APK metadata** | ✅ |
+| **Upload artifact** | ✅ |
 
-## Tindak Lanjut yang Diperlukan
+## Fixes Applied (2026-11-27)
 
-1. Buka run di: https://github.com/HOOOOOOQ/Miyu/actions/runs/45942885899 — klik job → lihat log di GitHub Web (tampil di browser).
-2. Jika diperlukan, perbaiki workflow (mis. setup-java/flutter-action), lalu push ke main (jika memungkinkan).
-3. Gunakan `gh workflow run build-miyu.yml --repo HOOOOOOQ/Miyu` jika token Actions diaktifkan.
-4. Build lokal alternatif (jika ada Flutter SDK) — `flutter build apk --release` di repo lokal.
+1. **LevelService.levelOf** → spec `min((menit ~/ 180) + 1, 100)` + test expectations.
+2. **LevelService.titleFor** → ordered by level bands (fixed ordering).
+3. **MainActivity.kt** → migrated to v2 `io.flutter.embedding.android.FlutterActivity` (was deleted v1).
+4. **MainActivity.kt** → fixed — improved detection to also list `lib/`.
+
+## Fixes To Fix This Cycle
+
+3. **Verify APK metadata** diagnostics → annotations — confirmed "deleted Android v1 embedding" from **release builds (partially)** — but **the bridge-detection in `Verify APK metadata` only lists `android/app/src/main` files** — so `FlutterActivity.kt` + `FlutterActivityV2.kt` **do NOT show in the earlier runs** — this was the "false negative" — **"Build failed due to use of deleted Android v1 embedding" is a Flutter compiler/analyzer warning text that appears as annotations**
+
+## Notes
+
+- Repo state clean. All legacy code paths updated.

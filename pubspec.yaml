@@ -1,0 +1,38 @@
+name: miyu
+description: Miyu — modern Android music player.
+version: 4.8.0+473
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  riverpod: ^2.4.9
+  drift: ^2.18.0
+  dio: ^5.4.0+1
+  shared_preferences: ^2.2.2
+  cached_network_image: ^3.8.0
+  palette_generator: ^0.3.3
+  flutter_animate: ^4.5.0
+  just_audio: ^0.9.36
+  audio_service: ^0.18.8
+  audio_session: ^0.1.23
+  url_launcher: ^6.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - fonts/
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: fonts/Figtree.ttf
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: fonts/Arimo.ttf

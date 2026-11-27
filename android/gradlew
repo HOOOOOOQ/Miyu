@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Gradle wrapper entry point.
+set -e
+
+APP_HOME=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+
+exec java -cp "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"

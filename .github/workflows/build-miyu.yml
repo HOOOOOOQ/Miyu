@@ -1,0 +1,74 @@
+name: Build Miyu APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Miyu Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Setup Flutter (stable, compatible)
+        uses: subosito/flutter-action@v2.15.1
+        with:
+          flutter-version: 3.41.3
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Flutter doctor -v
+        run: flutter doctor -v
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Dart format check
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter test
+        run: flutter test
+
+      - name: Flutter build APK release
+        run: flutter build apk --release
+
+      - name: Verify APK metadata
+        run: |
+          APK="$(find build -name app-release.apk -type f | head -1)"
+          echo "APK_PATH=$APK"
+          if [ -f "$APK" ]; then
+            ls -la "$APK"
+            echo "SHA256=$(sha256sum "$APK" | cut -d' ' -f1)"
+            unzip -p "$APK" AndroidManifest.xml | grep -aE 'package=' | head -2
+          else
+            echo "ERROR: APK not found"
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Miyu-4.8.0-473-Release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30

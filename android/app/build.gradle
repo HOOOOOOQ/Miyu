@@ -1,0 +1,80 @@
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterSdkPath = localProperties.getProperty('flutterSdkPath')
+if (!flutterSdkPath) {
+    throw new GradleException('Flutter SDK not found. Define location with flutterSdkPath in the gradle.properties file of the project.')
+}
+
+def flutterRoot = new File(flutterSdkPath)
+
+apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply from: "${flutterRoot}/packages/flutter_tools/gradle/apply_plugin_bundle_hook.gradle"
+
+android {
+    namespace 'app.miyu.my.id'
+    compileSdk 36
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId "app.miyu.my.id"
+        minSdk 26
+        targetSdk 36
+        versionCode 473
+        versionName "4.8.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            // Credentials passed via environment variables in CI.
+            storeFile new File(System.getenv('ANDROID_KEYSTORE') ?: '../.keystore')
+            keyAlias System.getenv('ANDROID_KEYALIAS') ?: 'miyu'
+            storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            keyPassword System.getenv('ANDROID_KEYALIAS_PASSWORD')
+        }
+        debug {
+            storeFile new File(System.getenv('ANDROID_DEBUG_KEYSTORE') ?: '../.keystore')
+            keyAlias System.getenv('ANDROID_DEBUG_KEYALIAS') ?: 'miyu'
+            storePassword System.getenv('ANDROID_DEBUG_KEYSTORE_PASSWORD')
+            keyPassword System.getenv('ANDROID_DEBUG_KEYALIAS_PASSWORD')
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flutter {
+        source '..'
+    }
+}
+
+// Dependencies
+dependencies {
+    // None beyond Flutter plugins (see pubspec.yaml)
+}

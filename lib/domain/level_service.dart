@@ -8,7 +8,8 @@ class LevelService {
   /// level = min((menit ~/ 180) + 1, 100)
   static int levelOf(int totalMs) {
     final menit = totalMs ~/ 60000;
-    return (menit ~/ 180) + 1 < 100 ? (menit ~/ 180) + 1 : 100;
+    final lvl = (menit ~/ 180) + 1;
+    return lvl < 100 ? lvl : 100;
   }
 
   /// progress = level >= 100 ? 100 : (menit % 180) * 100 / 180

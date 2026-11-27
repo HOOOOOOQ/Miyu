@@ -29,14 +29,14 @@ class LevelService {
 
   static const List<String> _titles = ['🌱 Pemula']; // placeholder, see titleFor
 
-  /// Level titles per MASTER TASK (mapped to levels below).
+  /// Level titles per MASTER TASK.
   static String titleFor(int level) {
-    if (level >= 50) return '🔥 Mythic';
-    if (level >= 40) return '⭐ Legenda';
-    if (level >= 28) return '🎵 Maestro';
-    if (level >= 20) return '📻 Kolektor';
-    if (level >= 10) return '🧭 Penjelajah';
-    if (level >= 5) return '🎧 Pendengar';
-    return '🌱 Pemula';
+    if (level < 5) return '🌱 Pemula';
+    if (level < 10) return '🎧 Pendengar';
+    if (level < 20) return '🧭 Penjelajah';
+    if (level < 28) return '📻 Kolektor';
+    if (level < 40) return '🎵 Maestro';
+    if (level < 50) return '⭐ Legenda';
+    return '🔥 Mythic';
   }
 }

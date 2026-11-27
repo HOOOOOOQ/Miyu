@@ -41,12 +41,15 @@ jobs:
       - name: Flutter pub get
         run: |
           set -o pipefail
-          flutter pub get --verbose 2>&1 | tail -60
+          {
+            echo "=== flutter pub get output (diagnostic) ==="
+            echo "CWD=$(pwd)"
+            ls -la
+            cat pubspec.yaml | head -30
+            flutter pub get 2>&1 | tail -60
+          } >> "$GITHUB_STEP_SUMMARY"
           code=${PIPESTATUS[0]:-$?}
-          echo "PUBGET_EXIT=$code"
-          if [ "$code" != "0" ]; then
-            echo "::error::flutter pub get failed (exit $code)"
-          fi
+          echo "PUBGET_EXIT=$code" >> "$GITHUB_STEP_SUMMARY"
           exit $code
 
       - name: Dart format check

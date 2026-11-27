@@ -24,8 +24,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
 
       - name: Setup Flutter (stable, compatible)
         uses: subosito/flutter-action@v2.23.0
@@ -42,63 +40,45 @@ jobs:
         run: flutter pub get
 
       - name: Dart format (auto-fix)
-        run: dart format lib test 2>&1 | head -15 || true
+        run: dart format lib test
 
       - name: Dart format check
-        run: |
-          dart format --output=none --set-exit-if-changed lib test 2>&1 | tee /tmp/fmt2.out || true
-          echo "=== FMT OUT (annotations) ==="
-          grep -E "." /tmp/fmt2.out 2>/dev/null | head -40 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          exit 0
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Flutter analyze
-        run: |
-          flutter analyze 2>&1 | tee /tmp/an.out || true
-          echo "=== ANALYZE OUT (annotations) ==="
-          grep -E "." /tmp/an.out 2>/dev/null | head -60 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          exit 0
+        run: flutter analyze
 
       - name: Flutter test
-        run: |
-          flutter test 2>&1 | tee /tmp/tst.out || true
-          echo "=== TEST OUT (annotations, first 60 lines) ==="
-          grep -E "." /tmp/tst.out 2>/dev/null | head -60 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          exit 0
+        run: flutter test
 
       - name: Flutter build APK release
         run: |
-          set -o pipefail
-          flutter build apk --release 2>&1 | tee /tmp/apk.out || true
-          echo "=== APK OUT (annotations, first 80 lines) ==="
-          grep -E "." /tmp/apk.out 2>/dev/null | head -80 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          exit 0
+          flutter build apk --release
 
       - name: Verify APK metadata
         run: |
-          {
-            set +e
-            APK="$(find build -name app-release.apk -type f | head -1)"
-            echo "APK_PATH=$APK"
-            ls -la "$APK" 2>&1
-            echo "=== Manifest (annotations) ==="
-            unzip -p "$APK" AndroidManifest.xml 2>&1 | grep -aE 'package=|versionCode=|versionName=' | head -5
-            echo "=== MainActivity.kt ==="; cat android/app/src/main/MainActivity.kt 2>&1
-            echo "=== FlutterActivity.kt ==="; cat android/app/src/main/FlutterActivity.kt 2>&1
-            echo "=== LocalActivity refs ==="; grep -rn "MainActivity\|FlutterActivity" android/ lib/ 2>&1 | head -12
-          } | tee /tmp/verify_dump.txt
-          echo "=== DUMP (annotations, first 60) ==="
-          grep -E "." /tmp/verify_dump.txt 2>/dev/null | head -60 | while IFS= read -r line; do
-            echo "::warning::$line"
-          done
-          exit 0
+          set -e
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          [ -f "$APK" ] || { echo "APK_NOT_FOUND: $APK"; exit 1; }
+          [ -s "$APK" ] || { echo "APK_EMPTY: $APK"; exit 1; }
+          SIZE=$(stat -c%s "$APK")
+          echo "APK_FILE=$APK" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "APK_SIZE=$SIZE" | tee -a "$GITHUB_STEP_SUMMARY"
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          echo "APK_SHA256=$SHA" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "=== apkanalyzer ===" | tee -a "$GITHUB_STEP_SUMMARY"
+          OUT=$(apkanalyzer apk info "$APK" 2>&1)
+          echo "$OUT" | head -20 | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "=== manifest ===" | tee -a "$GITHUB_STEP_SUMMARY"
+          unzip -p "$APK" AndroidManifest.xml | grep -aE 'android:name="app\.miyu\.my\.id"|android:versionCode|android:versionName' | head -5 | tee -a "$GITHUB_STEP_SUMMARY"
+          PKG=$(unzip -p "$APK" AndroidManifest.xml 2>/dev/null | grep -oaE 'android:name="app\.miyu\.my\.id"' | head -1)
+          [ -n "$PKG" ] || { echo "PACKAGE_NAME_MISMATCH"; exit 1; }
+          VC=$(unzip -p "$APK" AndroidManifest.xml 2>/dev/null | grep -oaE 'android:versionCode="[0-9]+"' | head -1 | grep -oaE '[0-9]+')
+          VN=$(unzip -p "$APK" AndroidManifest.xml 2>/dev/null | grep -oaE 'android:versionName="[^"]*"' | head -1 | grep -oaE '"[^"]*"' | tr -d '"')
+          echo "APK_VERSION_CODE=$VC" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "APK_VERSION_NAME=$VN" | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "$VC" = "473" ] || { echo "VC_MISMATCH=$VC"; exit 1; }
+          [ "$VN" = "4.8.0" ] || { echo "VN_MISMATCH=$VN"; exit 1; }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -106,3 +86,4 @@ jobs:
           name: Miyu-4.8.0-473-Release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+          if-no-files-found: error

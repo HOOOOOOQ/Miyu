@@ -39,7 +39,12 @@ jobs:
         run: flutter doctor -v
 
       - name: Flutter pub get
-        run: flutter pub get
+        run: |
+          echo "::warning::which_flutter=$(which flutter || echo MISSING)"
+          echo "::warning::which_dart=$(which dart || echo MISSING)"
+          echo "::warning::git_status=$(git status --short 2>&1 | head -5 | tr '\n' ';')"
+          echo "::warning::flutter_version=$(flutter --version 2>&1 | head -2)"
+          flutter pub get
 
       - name: Dart format check
         run: dart format --output=none --set-exit-if-changed lib test
